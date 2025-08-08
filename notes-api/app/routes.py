@@ -1,9 +1,10 @@
-
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, current_app, jsonify, request
 from sqlalchemy import select
-from .models import db, Note
+
+from .models import Note, db
 
 bp = Blueprint("notes", __name__)
+
 
 def _pagination_params():
     try:
@@ -13,6 +14,7 @@ def _pagination_params():
         return 1, current_app.config["PAGE_SIZE_DEFAULT"]
     per_page = max(1, min(per_page, current_app.config["PAGE_SIZE_MAX"]))
     return max(1, page), per_page
+
 
 @bp.route("/notes", methods=["POST"])
 def create_note():
@@ -26,6 +28,7 @@ def create_note():
     db.session.commit()
     return jsonify(note.to_dict()), 201
 
+
 @bp.route("/notes", methods=["GET"])
 def list_notes():
     q = (request.args.get("q") or "").strip()
@@ -34,21 +37,28 @@ def list_notes():
     query = select(Note)
     if q:
         like = f"%{q}%"
-        query = query.filter((Note.title.ilike(like)) | (Note.content.ilike(like)))
+        query = query.where((Note.title.ilike(like)) | (Note.content.ilike(like)))
 
     pagination = db.paginate(query, page=page, per_page=per_page, error_out=False)
-    return jsonify({
-        "items": [n.to_dict() for n in pagination.items],
-        "page": pagination.page,
-        "pages": pagination.pages,
-        "per_page": pagination.per_page,
-        "total": pagination.total,
-    }), 200
+    return (
+        jsonify(
+            {
+                "items": [n.to_dict() for n in pagination.items],
+                "page": pagination.page,
+                "pages": pagination.pages,
+                "per_page": pagination.per_page,
+                "total": pagination.total,
+            }
+        ),
+        200,
+    )
+
 
 @bp.route("/notes/<int:note_id>", methods=["GET"])
 def get_note(note_id: int):
     note = db.get_or_404(Note, note_id)
     return jsonify(note.to_dict()), 200
+
 
 @bp.route("/notes/<int:note_id>", methods=["PUT"])
 def update_note(note_id: int):
@@ -70,6 +80,7 @@ def update_note(note_id: int):
 
     db.session.commit()
     return jsonify(note.to_dict()), 200
+
 
 @bp.route("/notes/<int:note_id>", methods=["DELETE"])
 def delete_note(note_id: int):
