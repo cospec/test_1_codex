@@ -1,8 +1,9 @@
-
 from flask import Flask
+
 from .config import Config
 from .models import db
 from .routes import bp as notes_bp
+
 
 def create_app(test_config: dict | None = None) -> Flask:
     app = Flask(__name__)

@@ -1,4 +1,3 @@
-
 def test_crud_flow(client):
     # Create
     r = client.post("/notes", json={"title": "First", "content": "Hello"})
