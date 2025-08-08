@@ -1,0 +1,11 @@
+
+services:
+  notes-api:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_APP=app:create_app
+      - FLASK_ENV=development
+    volumes:
+      - .:/app
